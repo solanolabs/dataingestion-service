@@ -1,0 +1,18 @@
+---
+applications:
+  - name: training2-predix-dataingestion
+    buildpack: java_buildpack
+    path: target/dataingestion-service-1.1.2.jar 
+    services:
+      - predixAsset
+      - predixTimeseries    
+      - postgresql93
+env:
+    predix_asset_name: predixAsset
+    predix_timeseries_name : predixTimeseries
+    predix_http_datariver_dbname: postgresql93
+    SPRING_PROFILES_ACTIVE : cloud,cloudtraining2
+    predix_userName : rmd_user_1
+    predix_password : rmd_user_1
+    predix_oauthRestHost : stc.predix-uaa-test.grc-apps.svc.ice.ge.com
+    predix_oauthClientId : training_app_2:tr@aining2

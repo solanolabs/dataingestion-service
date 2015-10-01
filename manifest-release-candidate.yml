@@ -1,0 +1,24 @@
+---
+applications:
+  - name: release-candidate-predix-dataingestion
+    buildpack: java_buildpack
+    path: target/dataingestion-service-1.1.2.jar 
+     services:
+      - predix-asset-unittest
+      - predix-timeseries-unittest
+      - predix-uaa-sysint-unittest  
+      - postgresql93    
+env:
+    SPRING_PROFILES_ACTIVE : cloud,clouddev
+    predix_asset_name: predix-asset-unittest
+    predix_timeseries_name: predix-timeseries-unittest
+    predix_http_datariver_dbname: postgresql93
+    predix_oauthRestHost: 35492c1e-657c-4377-ac51-add963552460.predix-uaa-sysint.grc-apps.svc.ice.ge.com
+    predix_oauthClientId: rmd-unittest:secret
+    trustedIssuerIdsRegexPattern: ^https://(.*\\.)?predix-uaa-sysint.grc-apps.svc.ice.ge.com/oauth/token$
+    accessTokenEndpointUrl : https://35492c1e-657c-4377-ac51-add963552460.predix-uaa-sysint.grc-apps.svc.ice.ge.com/oauth/token
+    clientId : rmd-unittest
+    clientSecret: secret
+    acsUri : https://acs-staging.grc-apps.svc.ice.ge.com
+    acsSubZone : rmdsubdomain
+    predixWebSocketURI: wss://integration-predix-dataingestion.grc-apps.svc.ice.ge.com/livestream/messages
