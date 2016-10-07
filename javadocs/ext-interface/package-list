@@ -1,0 +1,6 @@
+com.ge.predix.solsvc.dataingestion.api
+com.ge.predix.solsvc.dataingestion.boot
+com.ge.predix.solsvc.dataingestion.handler
+com.ge.predix.solsvc.dataingestion.service
+com.ge.predix.solsvc.dataingestion.service.type
+com.ge.predix.solsvc.dataingestion.websocket
