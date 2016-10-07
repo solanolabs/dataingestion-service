@@ -1,0 +1,21 @@
+---
+applications:
+  - name: template-dataingestion-service
+    buildpack: java_buildpack
+    path: target/dataingestion-service-2.0.4.jar
+    memory: 500MB
+    services:
+      - ${assetService}
+      - ${timeSeriesService}
+      - ${uaaService}
+env:
+    SPRING_PROFILES_ACTIVE : cloud,clouddev
+    predix_asset_name: ${assetService}
+    predix_timeseries_name: ${timeSeriesService}
+    predix_oauth_restHost: ${oauthRestHost}
+    predix_oauth_clientId: ${clientId}:${secret}
+    predix_websocket_uri: wss://${WEB_SOCKET_HOST}/livestream/messages
+    predix_wspool_maxIdle : 5
+    predix_wspool_maxActive : 5
+    predix_wspool_maxWait : 8000
+    predix_wspool_maxInstances : 5
