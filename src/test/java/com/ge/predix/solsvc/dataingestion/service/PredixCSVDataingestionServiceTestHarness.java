@@ -4,14 +4,18 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.zip.DataFormatException;
 
 import org.apache.http.Header;
@@ -128,14 +132,17 @@ public class PredixCSVDataingestionServiceTestHarness {
 		HashMap<String,Body> bodyMap = new HashMap<String,Body>();
 		String[] headerRow = null;
 		DateTimeFormatter df = null;
+		SimpleDateFormat sdf = null;
 		for (String[] row : rows) {
 			if (i++ == 0) {
 				headerRow = row;
 				String timeFormat = row[0];
 				if ( timeFormat.startsWith("Date")) {
-					timeFormat = timeFormat.substring(timeFormat.indexOf("(")+1, timeFormat.indexOf(")")-1);
+					timeFormat = timeFormat.substring(timeFormat.indexOf("(")+1, timeFormat.indexOf(")"));
 				}
 				df = DateTimeFormatter.ofPattern(timeFormat);
+				sdf = new SimpleDateFormat(timeFormat);
+				sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
 				for (int j = 1; j < row.length; j++) {
 					Body body = new Body();
 					bodies.add(body);
@@ -146,10 +153,19 @@ public class PredixCSVDataingestionServiceTestHarness {
 			}
 			else {
 				String time = row[0];
-				@SuppressWarnings("null")
-				TemporalAccessor t = df.parse(time);
-				LocalDateTime   ldt = LocalDateTime.from(t);
-		        String epoch = Long.toString(ldt.toEpochSecond(ZoneOffset.UTC));
+				
+				//TemporalAccessor t = df.parse(time);
+				//LocalDateTime   ldt = LocalDateTime.from(t);
+				
+				String epoch;
+				try {
+					Date date = sdf.parse(time);
+					epoch = Long.toString(date.getTime());
+				} catch (ParseException e) {
+					throw new RuntimeException(e);
+				}
+				//LocalDateTime ldt = LocalDateTime.parse(time, df);
+		        //String epoch = Long.toString(ldt.toEpochSecond(ZoneOffset.UTC));
 				for (int j = 1; j < row.length; j++) {
 					String value = row[j];
 					String quality = row[j];

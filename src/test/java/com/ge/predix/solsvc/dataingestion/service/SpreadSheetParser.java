@@ -6,9 +6,13 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFDateUtil;
@@ -219,6 +223,7 @@ public class SpreadSheetParser {
 			if (row != null) {
 				for (int j = 0; j < colNum; j++) {
 					HSSFCell cell = row.getCell(j);
+					//dateCellValue = cell.getDateCellValue();
 					String value = cellToString(cell);
 					if (value != null)
 						data[i][j] = value.trim().replaceAll(
@@ -256,7 +261,15 @@ public class SpreadSheetParser {
 			return cell.getBooleanCellValue() + ""; //$NON-NLS-1$
 		} else if (cellType == Cell.CELL_TYPE_NUMERIC) {
 			if (DateUtil.isCellDateFormatted(cell)) {
-		        return cell.getDateCellValue().toString();
+				//Date date2 = cell.getDateCellValue();
+				//return date2.toString();  "Fri Jan 01 00:00:00 UTC"
+				
+				Date dateCellValue = cell.getDateCellValue();
+				SimpleDateFormat format = new SimpleDateFormat("yyyy/MM/dd hh:mm:ss");
+				format.setTimeZone(TimeZone.getTimeZone("UTC"));
+				String dateToStr = format.format(dateCellValue);
+				return dateToStr;
+		        //return cell.getDateCellValue().toString();
 		    }
 			return cell.getNumericCellValue() + ""; //$NON-NLS-1$
 		} else if (cellType == Cell.CELL_TYPE_STRING) {
