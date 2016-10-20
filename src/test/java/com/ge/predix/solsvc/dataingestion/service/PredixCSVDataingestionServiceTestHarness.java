@@ -3,13 +3,11 @@ package com.ge.predix.solsvc.dataingestion.service;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -63,7 +61,7 @@ public class PredixCSVDataingestionServiceTestHarness {
 
 	@Autowired
 	private TimeseriesRestConfig timeseriesRestConfig;
-	
+
 	/**
 	 * @throws Exception
 	 *             -
@@ -72,7 +70,6 @@ public class PredixCSVDataingestionServiceTestHarness {
 	public void setUp() throws Exception {
 		//
 	}
-
 
 	/**
 	 * @throws IOException
@@ -88,12 +85,13 @@ public class PredixCSVDataingestionServiceTestHarness {
 		FileInputStream stream = null;
 		try {
 			File file = new File("src/test/resources/timeseries-ingest.xls");
+			//File file = new File("src/test/resources/dataset.xls");
 			stream = new FileInputStream(file);
 			DatapointsIngestion datapointsIngestion = getDatapointsIngestion(stream);
 			this.timeseriesDataIngestionHandler.ingestTimeseriesData(datapointsIngestion);
 			// assertThat(response, startsWith("You successfully posted data"));
 		} finally {
-			if ( stream != null )
+			if (stream != null)
 				stream.close();
 		}
 
@@ -117,28 +115,29 @@ public class PredixCSVDataingestionServiceTestHarness {
 		headers.add(new BasicHeader("Origin", "http://localhost"));
 
 		DatapointsIngestion dpIngestion = getDatapointsIngestion(content);
-		
+
 		return dpIngestion;
 	}
 
 	@SuppressWarnings("nls")
-	private DatapointsIngestion getDatapointsIngestion(Map<String, String[][]> content)  {
+	private DatapointsIngestion getDatapointsIngestion(Map<String, String[][]> content) {
 		String[][] rows = content.get("timeseries-ingest");
 		DatapointsIngestion dpIngestion = new DatapointsIngestion();
 		dpIngestion.setMessageId(String.valueOf(System.currentTimeMillis()));
 
 		int i = 0;
 		List<Body> bodies = new ArrayList<Body>();
-		HashMap<String,Body> bodyMap = new HashMap<String,Body>();
+		HashMap<String, Body> bodyMap = new HashMap<String, Body>();
 		String[] headerRow = null;
 		DateTimeFormatter df = null;
 		SimpleDateFormat sdf = null;
+		String timeFormat = null;
 		for (String[] row : rows) {
 			if (i++ == 0) {
 				headerRow = row;
-				String timeFormat = row[0];
-				if ( timeFormat.startsWith("Date")) {
-					timeFormat = timeFormat.substring(timeFormat.indexOf("(")+1, timeFormat.indexOf(")"));
+				String firstCol = row[0];
+				if (firstCol.startsWith("Date")) {
+					timeFormat = firstCol.substring(firstCol.indexOf("(") + 1, firstCol.indexOf(")"));
 				}
 				df = DateTimeFormatter.ofPattern(timeFormat);
 				sdf = new SimpleDateFormat(timeFormat);
@@ -148,24 +147,24 @@ public class PredixCSVDataingestionServiceTestHarness {
 					bodies.add(body);
 					String name = row[j++];
 					body.setName(name);
-					bodyMap.put(name,body);
+					bodyMap.put(name, body);
 				}
-			}
-			else {
+			} else {
 				String time = row[0];
-				
-				//TemporalAccessor t = df.parse(time);
-				//LocalDateTime   ldt = LocalDateTime.from(t);
-				
 				String epoch;
 				try {
-					Date date = sdf.parse(time);
-					epoch = Long.toString(date.getTime());
+					if (timeFormat.startsWith("S")) {
+						// assume epoch
+						String decimal = new BigDecimal(time).toPlainString();
+						Date date = new Date(Long.parseLong(decimal));
+						epoch = Long.toString(date.getTime());
+					} else {
+						Date date = sdf.parse(time);
+						epoch = Long.toString(date.getTime());
+					}
 				} catch (ParseException e) {
 					throw new RuntimeException(e);
 				}
-				//LocalDateTime ldt = LocalDateTime.parse(time, df);
-		        //String epoch = Long.toString(ldt.toEpochSecond(ZoneOffset.UTC));
 				for (int j = 1; j < row.length; j++) {
 					String value = row[j];
 					String quality = row[j];
@@ -175,7 +174,7 @@ public class PredixCSVDataingestionServiceTestHarness {
 					body.getDatapoints().add(datapoint);
 					datapoint[0] = epoch;
 					datapoint[1] = value;
-					datapoint[2] = quality;	
+					datapoint[2] = quality;
 				}
 			}
 		}
