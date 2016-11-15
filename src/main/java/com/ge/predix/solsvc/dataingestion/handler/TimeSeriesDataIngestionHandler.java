@@ -8,6 +8,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 
 import javax.annotation.PostConstruct;
 
@@ -241,6 +244,7 @@ public class TimeSeriesDataIngestionHandler extends BaseFactory
                 if ( tags != null )
                 {
                     Body body = new Body();
+
                     AssetTag assetTag = getAssetTag(asset.getAssetTag(), nodeName);
                     body.setName(assetTag.getSourceTagId());
                     // attributes
@@ -285,31 +289,39 @@ public class TimeSeriesDataIngestionHandler extends BaseFactory
     public Double getConvertedValue(String nodeName, Double value)
     {
         Double convValue = null;
-        switch (nodeName.toLowerCase())
+        Pattern pattern = Pattern.compile("^(.*)-[0-9]*:(.*)$", Pattern.CASE_INSENSITIVE);
+        Matcher matcher = pattern.matcher(nodeName);
+
+        String nodeType = "";
+        if (matcher.matches()) {  // find() ?
+                nodeType = matcher.group(1) + "-" + matcher.group(2);
+        }
+
+        switch (nodeType.toLowerCase())
         {
-            case Constants.COMPRESSION_RATIO:
+            case "compressor-compressionratio":
                 convValue = value * 9.0 / 65535.0 + 1;
                 break;
-            case Constants.DISCHG_PRESSURE:
+            case "compressor-dischargepressure":
                 convValue = value * 100.0 / 65535.0;
                 break;
-            case Constants.SUCT_PRESSURE:
+            case "compressor-suctionpressure":
                 convValue = value * 100.0 / 65535.0;
                 break;
-            case Constants.MAX_PRESSURE:
+            case "compressor-maximumpressure":
                 convValue = value * 100.0 / 65535.0;
                 break;
-            case Constants.MIN_PRESSURE:
+            case "compressor-minimumpressure":
                 convValue = value * 100.0 / 65535.0;
                 break;
-            case Constants.VELOCITY:
+            case "compressor-velocity":
                 convValue = value * 0.5 / 65535.0;
                 break;
-            case Constants.TEMPERATURE:
+            case "compressor-temperature":
                 convValue = value * 200.0 / 65535.0;
                 break;
             default:
-                throw new UnsupportedOperationException("nameName=" + nodeName + " not found");
+                throw new UnsupportedOperationException("nodeName=" + nodeName + " not found");
         }
         return convValue;
     }
